@@ -16,3 +16,7 @@ Bugsnag.appVersion = app.getVersion();
 
 window.$ = window.jQuery = require('./vendor/jquery-1.12.0');
 start();
+
+localStorage.setItem('rocket.chat.currentHost', 'https://chat.iu.com.pk');
+localStorage.setItem('rocket.chat.hosts', '{"https://chat.iu.com.pk":{"title":"IU.Chat - https://chat.iu.com.pk","url":"https://chat.iu.com.pk","lastPath":"https://chat.iu.com.pk/home"}}');
+localStorage.setItem('sidebar-closed', 'true');
