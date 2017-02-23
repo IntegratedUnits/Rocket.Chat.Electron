@@ -1,111 +1,144 @@
-Rocket.Chat.Electron
-==============
+# Rocket.Chat Desktop App [![Build Status](https://img.shields.io/travis/RocketChat/Rocket.Chat.Electron/master.svg)](https://travis-ci.org/RocketChat/Rocket.Chat.Electron) [![Build status](https://ci.appveyor.com/api/projects/status/k72eq3gm42wt4j8b?svg=true)](https://ci.appveyor.com/project/RocketChat/rocket-chat-electron) [![Project Dependencies](https://david-dm.org/RocketChat/Rocket.Chat.Electron.svg)](https://david-dm.org/RocketChat/Rocket.Chat.Electron) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/54ebf39732d14cb19a1a992b46bd0da6)](https://www.codacy.com/app/RocketChat/Rocket-Chat-Electron?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=RocketChat/Rocket.Chat.Electron&amp;utm_campaign=Badge_Grade)
 
-All of Rocket.Chat's Desktop Apps - for Windows, Mac OSX, and Linux are based on the [Elecctron platform from GitHub](https://github.com/electron/electron).   This is the source code base for all desktop apps.
+Desktop application for [Rocket.Chat](https://github.com/RocketChat/Rocket.Chat) available for macOS, Windows and Linux using [Electron](http://electron.atom.io).
 
-### IMPORTANT
+# Download
 
-Please join the community server channel for Rocket.Chat Electron app users for feedback, interactions, and important notification regarding this code:
+You can download the latest version from the [Releases](https://github.com/RocketChat/Rocket.Chat.Electron/releases/latest) page.
 
-https://demo.rocket.chat/channel/desktopclient
+# Install
+Launch the installer and follow the instructions to install.
 
+## Windows Options
+On Windows you can run a silent install by adding the `/S` flag. You can also add the options below:
+
+- `/S` - Silent install
+- `/allusers` - Install for all users (requires admin)
+- `/currentuser` - Install for current user only (default)
 
 # Development
 
-#### Installation
+## Quick start
 
-```
+Prerequisites:
+
+* [Git](http://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [Node.js](https://nodejs.org)
+* [node-gyp](https://github.com/nodejs/node-gyp#installation)
+
+Now just clone and start the app:
+
+```sh
+git clone https://github.com/RocketChat/Rocket.Chat.Electron.git
+cd Rocket.Chat.Electron
 npm install
-```
-It will also download Electron runtime, and install dependencies for second `package.json` file inside `app` folder.
-
-Debian users need to make sure they have the package `libxss-dev` installed.
-
-#### Starting the app
-
-```
 npm start
 ```
 
-# Structure of the project
+## Structure of the project
 
-There are **two** `package.json` files:
+The sources is located in the `src` folder. Everything in this folder will be built automatically when running the app with `npm start`.
 
-#### 1. For development
-Sits at root of the application. Just used for development dependencies. **This file is not distributed with real application!**
+Stylesheets are written in `less` and are located in `src/stylesheets`. They will be build into a single `main.css` in the `app` folder.
+
+The build process compiles all stuff from the `src` folder and puts it into the `app` folder, so after the build has finished, your `app` folder contains the full, runnable application.
+
+## The build pipeline
+
+Build process is founded upon [gulp](https://github.com/gulpjs/gulp) task runner and [rollup](https://github.com/rollup/rollup) bundler. There are two entry files for your code: `src/background.js` and `src/app.js`. Rollup will follow all `import` statements starting from those files and compile code of the whole dependency tree into one `.js` file for each entry point.
 
 
-#### 2. For your application
-Sits on path: `app/package.json`. This is **real** manifest of your application. App dependencies declared here.
+## Adding npm modules
 
-### Project's folders
+Remember to respect the split between `dependencies` and `devDependencies` in `package.json` file. Only modules listed in `dependencies` will be included into distributable app.
 
-- `app` - code of your application goes here.
-- `config` - place where you can declare environment specific stuff for your app.
-- `build` - in this folder lands built, runnable application.
-- `releases` - ready for distribution installers will land here.
-- `resources` - resources needed for particular operating system.
-- `tasks` - build and development environment scripts.
+Side note: If the module you want to use in your app is a native one (not pure JavaScript but compiled C code or something) you should first  run `npm install name_of_npm_module --save` and then `npm run postinstall` to rebuild the module for Electron. This needs to be done only once when you're first time installing the module. Later on postinstall script will fire automatically with every `npm install`.
+
+## Working with modules
+
+Thanks to [rollup](https://github.com/rollup/rollup) you can (and should) use ES6 modules for most code in `src` folder.
+
+Use ES6 syntax in the `src` folder like this:
+```js
+import myStuff from './my_lib/my_stuff';
+```
+
+The exception is in `src/public`. ES6 will work inside this folder, but it is limited to what Electron/Chromium supports. The key thing to note is that you cannot use `import` and `export` statements. Imports and exports need to be done using CommonJS syntax:
+
+```js
+const myStuff = require('./my_lib/my_stuff');
+const { myFunction } =  require('./App');
+```
+
+## Issues with Install
+
+### node-gyp
+Follow the installation instruction on [node-gyp readme](https://github.com/nodejs/node-gyp#installation).
+
+#### Ubuntu Install
+You will need to install:
+```sh
+build-essential
+libevas-dev
+libxss-dev
+```
+### Fedora Install
+You will need to install:
+```sh
+libX11
+libXScrnSaver-devel
+gcc-c++
+```
+
+#### Windows 7
+On Windows 7 you may have to follow option 2 of the [node-gyp install guide](https://github.com/nodejs/node-gyp#installation) and install Visual Studio
+
+# Testing
+
+## Unit tests
+
+```
+npm test
+```
+
+Using [electron-mocha](https://github.com/jprichardson/electron-mocha) test runner with the [chai](http://chaijs.com/api/assert/) assertion library. This task searches for all files in `src` directory which respect pattern `*.spec.js`.
+
+## End to end tests
+
+```
+npm run e2e
+```
+
+Using [mocha](https://mochajs.org/) test runner and [spectron](http://electron.atom.io/spectron/). This task searches for all files in `e2e` directory which respect pattern `*.e2e.js`.
+
+## Code coverage
+
+```
+npm run coverage
+```
+
+Using [istanbul](http://gotwarlost.github.io/istanbul/) code coverage tool.
+
+You can set the reporter(s) by setting `ISTANBUL_REPORTERS` environment variable (defaults to `text-summary` and `html`). The report directory can be set with `ISTANBUL_REPORT_DIR` (defaults to `coverage`).
 
 # Making a release
 
-**Note:** There are various icon and bitmap files in `resources` directory. Those are used in installers and are intended to be replaced by your own graphics.
+To package your app into an installer use command:
 
-To make ready for distribution installer use command:
 ```
 npm run release
 ```
-It will start the packaging process for operating system you are running this command on. Ready for distribution file will be outputted to `releases` directory.
 
-You can create Windows installer only when running on Windows, the same is true for Linux and OSX. So to generate all three installers you need all three operating systems.
+It will start the packaging process for operating system you are running this command on. Ready for distribution file will be outputted to `dist` directory.
 
-## Mac only
+You can create Windows installer only when running on Windows, the same is true for Linux and macOS. So to generate all three installers you need all three operating systems.
 
-#### App signing
+All packaging actions are handled by [electron-builder](https://github.com/electron-userland/electron-builder). It has a lot of [customization options](https://github.com/electron-userland/electron-builder/wiki/Options), which you can declare under ["build" key in package.json file](https://github.com/szwacz/electron-boilerplate/blob/master/package.json#L2).
 
-The Mac release supports [code signing](https://developer.apple.com/library/mac/documentation/Security/Conceptual/CodeSigningGuide/Procedures/Procedures.html). To sign the `.app` in the release image, include the certificate ID in the command as so,
-```shell
-npm run release -- --sign DX85ENM22A
-```
+# Useful links
 
-#### Mac App Store
-You should install the Electron build for MAS
-```
-export npm_config_platform=mas
-rm -rf node_modules
-npm install
-```
+http://developerthing.blogspot.com.br/2017/01/awesome-electron.html
 
-To sign your app for Mac App Store
-```shell
-npm run release -- --mas --mas-sign "3rd Party Mac Developer Application: Company Name (APPIDENTITY)" --mas-installer-sign "3rd Party Mac Developer Installer: Company Name (APPIDENTITY)"
-```
+# License
 
-Or edit the `app/package.json`, remove the `//` from `//codeSignIdentitiy` and update the values with your sign indentities
-```json
-  "//codeSignIdentitiy": {
-    "dmg": "Developer ID Application: Company Name (APPIDENTITY)",
-    "MAS": "3rd Party Mac Developer Application: Company Name (APPIDENTITY)",
-    "MASInstaller": "3rd Party Mac Developer Installer: Company Name (APPIDENTITY)"
-  }
-```
-
-You can change the application category too
-```json
-  "LSApplicationCategoryType": "public.app-category.productivity"
-```
-
-If you insert your indentities in the package.json you can compile for MAS like
-```
-npm run release -- --mas
-```
-
-## Windows only
-
-#### Installer
-
-The installer is built using [NSIS](http://nsis.sourceforge.net). You have to install NSIS version 3.0, and add its folder to PATH in Environment Variables, so it is reachable to scripts in this project. For example, `C:\Program Files (x86)\NSIS`.
-
-#### 32-bit build on 64-bit Windows
-
-There are still a lot of 32-bit Windows installations in use. If you want to support those systems and have 64-bit OS make sure you've installed 32-bit (instead of 64-bit) Node version. There are [versions managers](https://github.com/coreybutler/nvm-windows) if you feel the need for both architectures on the same machine.
+Released under the MIT license.
